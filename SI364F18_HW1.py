@@ -1,3 +1,4 @@
+
 ## HW 1
 ## SI 364 F18
 ## 1000 points
@@ -5,23 +6,104 @@
 #################################
 
 ## List below here, in a comment/comments, the people you worked with on this assignment AND any resources you used to find code (50 point deduction for not doing so). If none, write "None".
-
-
+"None"
 
 ## [PROBLEM 1] - 150 points
 ## Below is code for one of the simplest possible Flask applications. Edit the code so that once you run this application locally and go to the URL 'http://localhost:5000/class', you see a page that says "Welcome to SI 364!"
 
-from flask import Flask
+from flask import Flask, request
+import requests
+import json
 app = Flask(__name__)
 app.debug = True
 
-@app.route('/')
+## Problem 1 
+@app.route('/class')
 def hello_to_you():
-    return 'Hello!'
+	return 'Welcome to SI 364!'
 
+## Problem 2
+@app.route('/movie/<movie_name>', methods = ['GET', 'POST'])
+def getmovie(movie_name):
+	params = {}
+	params["term"] = movie_name
+	params["country"] = "US"
+	baseurl = "https://itunes.apple.com/search"
+	r = requests.get(baseurl, params=params)
+	response_json = json.loads(r.text)
+	response_str = str(response_json)
+	return response_str
+
+## Problem 3
+@app.route('/question', methods = ['GET', 'POST'])
+def birthday():
+	html_form = '''
+	<html>
+	<body>
+	<form action="/result" method = "POST"> 
+		<label for ="number"> What is your favorite number? : </label>
+		<br>
+		<input type="integer" name="number" id="number"></input>
+		<input type="submit" name="Submit"></input>
+	</form>
+	</body>
+	</html>
+	'''
+	return html_form
+
+@app.route('/result', methods = ['GET', 'POST'])
+def resultView():
+	if request.method == "POST":
+		number = request.form.get("number")
+	number = 2*int(number)
+	msg = "Double your favorite number is " + str(number) + "."
+	return msg
+
+## Problem 4
+## Problem 4
+@app.route('/problem4form', methods = ['GET', 'POST'])
+def dadjoke():
+	html_form = '''
+	<html>
+	<body>
+	<form action="" method = "POST"> 
+		<label for ="term"> keyword : </label>
+		<br>
+		<input type="text" name="term" id="term"></input>
+		<br>
+		<input type="checkbox" name="include" value="True" checked="checked"> Include keyword in joke?
+		<br>
+		<input type="submit" name="Submit"></input>
+	</form>
+	</body>
+	</html>
+	'''
+	checkbox = request.form.get("include")
+	term = request.form.get("term")
+	params = {}
+	params["term"] = str(term)
+	if checkbox == "True":
+		try:
+			baseurl = "https://icanhazdadjoke.com/search"
+			r = requests.get(baseurl, params=params, headers={"Accept":"application/json"})
+			response_json = json.loads(r.text)["results"][0]["joke"]
+			response_str = str(response_json)
+		
+		except:
+			response_str = "couldn't find a joke with that term"
+		return html_form + response_str
+	else:
+		baseurl = "https://icanhazdadjoke.com/"
+		params = {}
+		r = requests.get(baseurl, headers={"Accept":"application/json"})
+		response_json = json.loads(r.text)["joke"]
+		response_str = str(response_json)
+		return html_form + response_str
 
 if __name__ == '__main__':
-    app.run()
+	app.run()
+
+
 
 
 ## [PROBLEM 2] - 250 points
